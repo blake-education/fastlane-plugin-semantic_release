@@ -23,9 +23,12 @@ module Fastlane
 
     class AnalyzeCommitsAction < Action
       def self.get_last_tag(params)
-        command = "git describe --tags --match=#{params[:match]}"
+        command = "git describe --tags --match='#{params[:match]}'"
         if params[:prerelease]
           command += " --exclude='#{params[:match]}-#{params[:prerelease]}.*'"
+        end
+        if params[:abbrev]
+          command += " --abbrev=#{params[:abbrev]}"
         end
         Actions.sh(command, log: params[:debug])
       rescue StandardError
@@ -49,7 +52,7 @@ module Fastlane
 
       def self.get_beginning_of_next_sprint(params)
         git_command = "git rev-list --max-parents=0 HEAD"
-        tag = get_last_tag(match: params[:match], debug: params[:debug], prerelease: params[:prerelease])
+        tag = get_last_tag(match: params[:match], abbrev: params[:abbrev], debug: params[:debug], prerelease: params[:prerelease])
 
         if tag.empty?
           UI.message("It couldn't match tag for #{params[:match]}. Check if first commit can be taken as a beginning of next release")
@@ -386,6 +389,12 @@ module Fastlane
             default_value: false,
             type: Boolean,
             optional: true
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :abbrev,
+            description: "Abbrev parameter of git describe. See man page of git describe for more info",
+            optional: true,
+            type: Integer
           )
         ]
       end
